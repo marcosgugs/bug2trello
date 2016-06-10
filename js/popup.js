@@ -122,6 +122,27 @@ function addBitbucket(url) {
     });
 }
 
+
+function addMantisbt(url) {
+    var path = url.pathname.split('/');
+    var bugNum = url.search.split('id=').slice(-1)[0];
+    var bugJson = $.ajax({
+        type: "Get",
+        url: url,
+        dataType: "html",
+        success: function (data) {
+            var bugRepo = $(data).find('.row-1 td:nth-child(2)').html();
+            var prefix = bugRepo + ": #" + bugNum
+            var body = $($(data).find('tr.row-2')[3]).find('td:last-child').html();
+            var title = $.trim($($(data).find('tr.row-1')[3]).find('td:last-child').html().split(':').slice(-1)[0]);
+            addCard(prefix, title, body, url)
+        },
+        error: function () {
+            $('#error').show();
+        }
+    });
+}
+
 function addGoogle(url) {
     var path = url.pathname.split('/');
     var bugNum = url.search.split('id=').slice(-1)[0];
@@ -246,6 +267,7 @@ function addBugzilla(url) {
 function parseLink(tablink) {
     var parser = document.createElement('a');
     parser.href = tablink;
+    console.log('bug2trello parseLink', tablink);
     if(parser.hostname == 'bugs.launchpad.net' && (parser.pathname.indexOf('+bug') > -1)) {
         addLaunchpad(parser, "Bug");
     }
@@ -262,6 +284,10 @@ function parseLink(tablink) {
     }
     else if(parser.hostname == 'bitbucket.org' && (parser.pathname.indexOf('issue') > -1)) {
         addBitbucket(parser);
+    }
+    else if(parser.href.indexOf('mantisbt') >= 0 && ((parser.pathname.indexOf('view.php') > -1) || (parser.pathname.indexOf('bug_update_page.php') > -1))) {
+        console.log('bug2trello addMantisbt', tablink);
+        addMantisbt(parser);
     }
     else if(parser.hostname == 'sourceforge.net' && (parser.pathname.indexOf('bugs') > -1 || parser.pathname.indexOf('feature-requests') > -1)) {
         addSourceforge(parser);
